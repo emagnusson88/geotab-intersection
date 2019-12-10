@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 import scipy.stats
+from sklearn.metrics import mean_squared_error
+import datetime
+import time
+
 
 #summary functions
 def summarize(df, quant=False):
@@ -88,7 +92,7 @@ monthly_rainfall = {'Atlanta1': 5.02, 'Atlanta5': 3.95, 'Atlanta6': 3.63, 'Atlan
                     'Philadelphia7': 4.39, 'Philadelphia8': 3.82, 'Philadelphia9':3.88 ,
                     'Philadelphia10': 2.75, 'Philadelphia11': 3.16, 'Philadelphia12': 3.31}
 
-
+#what though
 def reduce_mem_usage(df, verbose=True):
     """
     no idea what this does
@@ -120,3 +124,28 @@ def reduce_mem_usage(df, verbose=True):
     end_mem = df.memory_usage().sum() / 1024**2
     if verbose: print('Mem. usage decreased to {:5.2f} Mb ({:.1f}% reduction)'.format(end_mem, 100 * (start_mem - end_mem) / start_mem))
     return df
+
+#root mean squared error
+
+def importance_df(model, features):
+    importances = list(model.feature_importances_)
+    # List of tuples with variable and importance
+    feature_importances = [(feature, round(importance, 2)) for feature, importance in zip(features, importances)]
+    # Sort the feature importances by most important first
+    feature_importances = sorted(feature_importances, key = lambda x: x[1], reverse = True)
+    # Print out the feature and importances
+    return pd.DataFrame(feature_importances, columns = ['feature', 'importance'])
+
+def run_model(model, x_train, x_test, y_train, y_test):
+    start_time = time.time()
+
+    model.fit(x_train, y_train)
+    preds = model.predict(x_test)
+
+    total_time = time.time()-start_time
+    score = np.sqrt(mean_squared_error(preds, y_test))
+
+    return {
+    'run_time':str(datetime.timedelta(seconds = total_time)),
+    'run_score': score
+    }
